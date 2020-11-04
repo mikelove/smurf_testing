@@ -15,4 +15,4 @@ ggplot(dat, aes(x=numUniq,fill=type)) +
 ggplot(dat, aes(x=type, y=time)) +
   geom_boxplot(outlier.color=NA) +
   geom_jitter(width=.1) +
-  facet_wrap(~ n, labeller = label_both)
+  facet_grid(n ~ cnt, labeller = label_both)

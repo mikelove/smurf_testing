@@ -8,37 +8,45 @@ library(smurf)
 library(pbapply)
 
 ans <- pbsapply(1:200, function(i) {
+
   set.seed(i)
-  k <- 5
-  size <- rep(rep(c(2,cnt),each=n/2), times=k)
-  p <- rep((3 + c(-1,0,0,1,1))/6, each=n)
-  y <- rbinom(k*n, prob=p, size=size)
-  r <- y/size
-  x <- factor(rep(1:k,each=n))
-  f <- r ~ p(x, pen="gflasso", refcat="1")
+  k <- 5 # number of cell types
+  size <- rep(rep(c(2,cnt),each=n/2), times=k) # total count
+  p <- rep((3 + c(-1,0,0,1,1))/6, each=n) # true prob
+  y <- rbinom(k*n, prob=p, size=size) # obs counts
+  r <- y/size # ratio
+  x <- factor(rep(1:k,each=n)) # cell type dummy
+  f <- r ~ p(x, pen="gflasso", refcat="1") # formula
+
   # binomial
   t <- system.time({
+
+    # need to use tryCatch to avoid lambda.max errors
     try1 <- tryCatch({
       fit <- glmsmurf(formula=f, family=binomial(link="logit"), data=data.frame(x,r),
                       weights=size, pen.weights="glm.stand", lambda="cv1se.dev", 
                       control=list(lambda.length=20L, k=5, ncores=1));
       TRUE
       }, error=function(e) FALSE)
-  })[[3]]
+    
+  })[[3]] # saving the elapsed time
   # gaussian
   t2 <- system.time({
+    
     try2 <- tryCatch({
       fit2 <- glmsmurf(formula=f, family=gaussian(), data=data.frame(x,r),
                        pen.weights="glm.stand", lambda="cv1se.dev", 
                        control=list(lambda.length=20L, k=5, ncores=1));
       TRUE
       }, error=function(e) FALSE)
+    
   })[[3]]
+  
   if (try1 & try2) {
     coef(fit)
-    l <- length(unique(coef(fit)))
+    l <- length(unique(coef(fit))) # 3 is correct
     coef(fit2)
-    l2 <- length(unique(coef(fit2)))
+    l2 <- length(unique(coef(fit2))) # 3 is correct
     out <- c(l,l2,t,t2)
   } else {
     out <- NULL
@@ -46,14 +54,17 @@ ans <- pbsapply(1:200, function(i) {
   out
 }, cl=6)
 
+# dealing with the tryCatch errors...
 if (!is.matrix(ans)) {
   ans <- do.call(cbind, ans)
 }
 
+# save the results as a data.frame
 dat <- data.frame(type=rep(c("bin","gau"),each=ncol(ans)),
                   numUniq=as.vector(t(ans[1:2,])),
                   time=as.vector(t(ans[3:4,])),
                   n=n,
                   cnt=cnt)
 
+# write out as a table
 write.table(dat, file=out, row.names=FALSE, col.names=FALSE, quote=FALSE, sep=",")
