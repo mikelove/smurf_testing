@@ -1,7 +1,7 @@
 cmd_args=commandArgs(TRUE)
 
-n <- as.numeric(cmd_args[1])
-cnt <- as.numeric(cmd_args[2])
+n <- as.numeric(cmd_args[1]) # cells per cell type
+cnt <- as.numeric(cmd_args[2]) # the "high" total count
 out <- cmd_args[3]
 
 library(smurf)
@@ -11,7 +11,8 @@ ans <- pbsapply(1:200, function(i) {
 
   set.seed(i)
   k <- 5 # number of cell types
-  size <- rep(rep(c(2,cnt),each=n/2), times=k) # total count
+  low_count <- 3 # the "low" total count
+  size <- rep(rep(c(low_count, cnt),each=n/2), times=k) # total count
   p <- rep((3 + c(-1,0,0,1,1))/6, each=n) # true prob
   y <- rbinom(k*n, prob=p, size=size) # obs counts
   r <- y/size # ratio
