@@ -57,7 +57,7 @@ ans <- pbsapply(1:200, function(i) {
     out <- NULL
   }
   out
-}, cl=2)
+}, cl=4)
 
 # dealing with the tryCatch errors...
 if (!is.matrix(ans)) {
