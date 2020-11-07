@@ -6,14 +6,16 @@ out <- cmd_args[3]
 
 library(smurf)
 library(pbapply)
+library(mclust)
 
 ans <- pbsapply(1:200, function(i) {
 
   set.seed(i)
-  k <- 5 # number of cell types
+  k <- 10 # number of cell types
   low_count <- 3 # the "low" total count
   size <- rep(rep(c(low_count, cnt),each=n/2), times=k) # total count
-  p <- rep((3 + c(-1,0,0,1,1))/6, each=n) # true prob
+  p.vec <- (3 + c(-2,-2,-1,-1,0,0,1,1,2,2))/6
+  p <- rep(p.vec, each=n) # true prob
   y <- rbinom(k*n, prob=p, size=size) # obs counts
   r <- y/size # ratio
   x <- factor(rep(1:k,each=n)) # cell type dummy
@@ -44,16 +46,18 @@ ans <- pbsapply(1:200, function(i) {
   })[[3]]
   
   if (try1 & try2) {
-    coef(fit)
-    l <- length(unique(coef(fit))) # 3 is correct
-    coef(fit2)
-    l2 <- length(unique(coef(fit2))) # 3 is correct
-    out <- c(l,l2,t,t2)
+    co <- coef(fit)
+    co <- co + c(0,rep(co[1],k-1))
+    a <- adjustedRandIndex(factor(p.vec), factor(co))
+    co <- coef(fit2)
+    co <- co + c(0,rep(co[1],k-1))
+    a2 <- adjustedRandIndex(factor(p.vec), factor(co))
+    out <- c(a,a2,t,t2)
   } else {
     out <- NULL
   }
   out
-}, cl=6)
+}, cl=2)
 
 # dealing with the tryCatch errors...
 if (!is.matrix(ans)) {
@@ -62,7 +66,7 @@ if (!is.matrix(ans)) {
 
 # save the results as a data.frame
 dat <- data.frame(type=rep(c("bin","gau"),each=ncol(ans)),
-                  numUniq=as.vector(t(ans[1:2,])),
+                  ARI=as.vector(t(ans[1:2,])),
                   time=as.vector(t(ans[3:4,])),
                   n=n,
                   cnt=cnt)
