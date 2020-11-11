@@ -16,7 +16,7 @@ ans <- pbsapply(1:200, function(i) {
   mean_total_count <- rep(rep(c(low_count, cnt),each=n/2), times=k) # total count
   size <- rpois(n * k, mean_total_count)
   size[size == 0] <- 1
-  p.vec <- (3 + c(-2,-2,-1,-1,0,0,1,1,2,2))/6
+  p.vec <- (3 + rep(seq(from=-2,to=2,length.out=k/2),each=2))/6
   p <- rep(p.vec, each=n) # true prob
   y <- rbinom(k*n, prob=p, size=size) # obs counts
   r <- y/size # ratio
