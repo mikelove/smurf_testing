@@ -7,6 +7,7 @@ out <- cmd_args[3]
 library(smurf)
 library(pbapply)
 library(mclust)
+library(emdbook)
 
 ans <- pbsapply(1:200, function(i) {
 
@@ -18,7 +19,8 @@ ans <- pbsapply(1:200, function(i) {
   size[size == 0] <- 1
   p.vec <- (3 + c(-2,-2,-1,-1,0,0,1,1,2,2))/6
   p <- rep(p.vec, each=n) # true prob
-  y <- rbinom(k*n, prob=p, size=size) # obs counts
+  #y <- rbinom(k*n, prob=p, size=size) # obs counts
+  y <- rbetabinom(k*n, prob=p, size=size, theta=10) # obs counts
   r <- y/size # ratio
   x <- factor(rep(1:k,each=n)) # cell type dummy
   f <- r ~ p(x, pen="gflasso", refcat="1") # formula
@@ -59,7 +61,7 @@ ans <- pbsapply(1:200, function(i) {
     out <- NULL
   }
   out
-}, cl=4)
+}, cl=6)
 
 # dealing with the tryCatch errors...
 if (!is.matrix(ans)) {
