@@ -1,7 +1,7 @@
 cmd_args=commandArgs(TRUE)
 
 n <- as.numeric(cmd_args[1]) # cells per cell type
-cnt <- as.numeric(cmd_args[2]) # the "high" total count
+cnt <- as.numeric(cmd_args[2]) # the mean "high" total count
 out <- cmd_args[3]
 
 library(smurf)
@@ -12,8 +12,10 @@ ans <- pbsapply(1:200, function(i) {
 
   set.seed(i)
   k <- 10 # number of cell types
-  low_count <- 3 # the "low" total count
-  size <- rep(rep(c(low_count, cnt),each=n/2), times=k) # total count
+  low_count <- 5 # the mean "low" total count
+  mean_total_count <- rep(rep(c(low_count, cnt),each=n/2), times=k) # total count
+  size <- rpois(n * k, mean_total_count)
+  size[size == 0] <- 1
   p.vec <- (3 + c(-2,-2,-1,-1,0,0,1,1,2,2))/6
   p <- rep(p.vec, each=n) # true prob
   y <- rbinom(k*n, prob=p, size=size) # obs counts

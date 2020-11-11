@@ -8,8 +8,9 @@ colnames(dat) <- c("type","ARI","time","n","cnt")
 dat %>% group_by(cnt, n) %>% summarize(count=n()) %>% data.frame
 
 ggplot(dat, aes(x=ARI,fill=type)) +
-  geom_histogram(position="dodge") +
+  geom_bar(stat="count", position="dodge", width=.075) +
   facet_grid(n ~ cnt, labeller = label_both)
+
 ggplot(dat, aes(x=type, y=time)) +
   geom_boxplot(outlier.color=NA) +
   geom_jitter(width=.1) +
